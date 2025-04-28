@@ -12,10 +12,17 @@ class OCRProcessor {
     // DÉFINIR le chemin des données (tessdata)
     // DÉFINIR la langue (anglais)
     // LIMITER les caractères reconnus à 0-9 et a-z
-    tesseract = new Tesseract();
-    tesseract.setDatapath(dataPath("") + "/tessdata");
-    tesseract.setLanguage("eng");
-    tesseract.setTessVariable("tessedit_char_whitelist", "0123456789abcdefghijklmnopqrstuvwxyz");
+    try {
+      tesseract = new Tesseract();
+      String tessDataPath = dataPath("") + "/tessdata";
+      println("Chemin tessdata utilisé : " + tessDataPath); // Débogage
+      tesseract.setDatapath(tessDataPath);
+      tesseract.setLanguage("eng");
+      //tesseract.setTessVariable("tessedit_char_whitelist", "0123456789abcdefghijklmnopqrstuvwxyz");
+    } catch (Exception e) {
+      println("Erreur lors de l'initialisation de Tesseract : " + e.getMessage());
+      e.printStackTrace();
+    }
   }
 
   private BufferedImage toBufferedImage(PImage img) {
@@ -45,14 +52,21 @@ class OCRProcessor {
     //     RETOURNER une chaîne vide
     // FINESSAYER
     try {
+      if (cubeImage == null) {
+        println("Erreur : l'image passée à recognizeText est null");
+        return "";
+      }
       PImage processedImg = preprocessImage(cubeImage);
       BufferedImage bimg = toBufferedImage(processedImg);
       String result = tesseract.doOCR(bimg).trim();
       if (result.matches("[0-9a-z]+")) {
         return result;
+      } else {
+        println("Résultat OCR non alphanumérique : " + result);
       }
     } catch (TesseractException e) {
       println("Erreur OCR : " + e.getMessage());
+      e.printStackTrace();
     }
     return "";
   }
@@ -62,8 +76,9 @@ class OCRProcessor {
     // APPLIQUER un filtre de niveaux de gris à img
     // APPLIQUER un seuillage (threshold 0.5) pour améliorer le contraste
     // RETOURNER l'image prétraitée
-    img.filter(GRAY);
-    img.filter(THRESHOLD, 0.5);
-    return img;
+    PImage processed = img.get(); // Créer une copie pour ne pas modifier l'original
+    processed.filter(GRAY);
+    processed.filter(THRESHOLD, 0.5);
+    return processed;
   }
 }

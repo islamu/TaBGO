@@ -43,7 +43,7 @@ public class FiltrageCubes {
     return (y1 - height <= y2 && y2 <= y1 + height);
   }
 
-  private static class ImageObject {
+  private class ImageObject {
     boolean isTopCode;
     TopCode topCode;
     Cube cube;
